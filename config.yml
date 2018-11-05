@@ -1,0 +1,30 @@
+comment = "Write a meaningful comment about the experiment."
+
+[train]
+model_path = test_1
+
+# whether to load pretrained mode
+preload_model = False
+
+# pretrained model path
+pretrain_model_path = "trained_models/"
+
+# number of epochs to train
+num_epochs = 100
+
+# batch size for training
+batch_size = 5
+
+# Optimizer
+optim = adam
+
+# Learning rate
+lr = 0.001
+
+# weight decay
+weight_decay = 0.0
+
+
+#
+feature_H = 256
+feature_W = 128

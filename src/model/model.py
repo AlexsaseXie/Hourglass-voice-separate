@@ -113,20 +113,23 @@ class HourglassNet(nn.Module):
 class VoiceSeparateNet(nn.Module):
     def __init__(self, 
             input_shape=[512, 64],
-            pred_masks = 2
             ):
 
         super(VoiceSeparateNet, self).__init__()
 
         self.input_shape = input_shape
-        self.pred_masks = 2
 
         self.hg1 = HourglassNet(input_shape=self.input_shape)
         self.hg2 = HourglassNet(input_shape=self.input_shape)
+        self.hg3 = HourglassNet(input_shape=self.input_shape)
+        self.hg4 = HourglassNet(input_shape=self.input_shape)
+
 
     def forward(self, x):
 
         mask1s, next_inputs = self.hg1(x)
-        mask2s, _ = self.hg2(next_inputs)
+        mask2s, next_inputs = self.hg2(next_inputs)
+        mask3s, next_inputs = self.hg3(next_inputs)
+        mask4s, _ = self.hg4(next_inputs)
 
-        return mask1s, mask2s
+        return [mask1s, mask2s, mask3s, mask4s]

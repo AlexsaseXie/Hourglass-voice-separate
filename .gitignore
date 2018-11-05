@@ -4,4 +4,6 @@
 *.wav
 *.png
 
+trained_models/*.pth
+
 .idea/
