@@ -7,7 +7,7 @@ model_path = test_1
 preload_model = False
 
 # pretrained model path
-pretrain_model_path = "trained_models/"
+pretrain_model_path = "trained_models/test_1.pth"
 
 # number of epochs to train
 num_epochs = 100

@@ -14,14 +14,24 @@ if len(sys.argv) > 1:
 else:
     config = read_config.Config("config.yml")
 
-
+# model name
 model_name = config.model_path
-
 net = VoiceSeparateNet(input_shape=config.feature_size)
 
+# train data generator
 gen = Generator(file_path='data/train/', feature_size=config.feature_size)
 train_data_iter = gen.get_file_data(batch_size = config.batch_size)
 
+# load pre-trained model
+if config.preload_model:
+    net.load_state_dict(torch.load(config.pretrain_modelpath))
+
+# require grad
+for param in net.parameters():
+    param.requires_grad = True
+
+
+# optimizer
 if config.optim == "sgd":
     optimizer = optim.SGD(
         [para for para in net.parameters() if para.requires_grad],
@@ -34,11 +44,13 @@ elif config.optim == "adam":
         weight_decay=config.weight_decay, lr=config.lr)
 
 
+train_data_size = gen.whole_mel.shape[0]
+
 for epoch in range(config.epochs):
     train_loss = 0
     net.train()
 
-    for batch_idx in range(config.batch_size):
+    for batch_idx in range( train_data_size // config.batch_size):
         optimizer.zero_grad()
 
         whole, left, right = next(train_data_iter)
@@ -74,7 +86,7 @@ for epoch in range(config.epochs):
     #if test_reward > prev_test_reward:
     torch.save(net.state_dict(), "trained_models/{}.pth".format(model_name))
 
-    
+
 
 
 

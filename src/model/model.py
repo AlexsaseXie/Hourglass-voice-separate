@@ -106,10 +106,6 @@ class HourglassNet(nn.Module):
 
         return outputs, next_inputs
 
-    def test(self, data):
-        """ Describes test behaviour of different models"""
-        return 0
-
 class VoiceSeparateNet(nn.Module):
     def __init__(self, 
             input_shape=[512, 64],
@@ -133,3 +129,12 @@ class VoiceSeparateNet(nn.Module):
         mask4s, _ = self.hg4(next_inputs)
 
         return [mask1s, mask2s, mask3s, mask4s]
+
+    def predict(self, x):
+
+        mask1s, next_inputs = self.hg1(x)
+        mask2s, next_inputs = self.hg2(next_inputs)
+        mask3s, next_inputs = self.hg3(next_inputs)
+        mask4s, _ = self.hg4(next_inputs)
+
+        return mask4s
