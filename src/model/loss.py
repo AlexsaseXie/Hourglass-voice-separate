@@ -8,8 +8,6 @@ def J_batch_loss(masks, initial_mels, labels):
     masks & initial_mels : batch * 1 * 256 * 128
     label : batch * 1 * 256 * 128
     """
-    loss = Variable(torch.zeros(1))
-
     pred = masks * initial_mels
     fn = nn.L1Loss()
 
@@ -17,13 +15,17 @@ def J_batch_loss(masks, initial_mels, labels):
 
     return loss
 
-def J_whole_loss(maskss, initial_mels, labels):
+def J_whole_loss(maskss, initial_mels, labels, use_gpu = False):
     """
     maskss : [mask1s, mask2s, mask3s ...]
     initial_mels : batch * 1 * 256 * 128
     label : batch * 1 * 256 * 128
     """
-    loss = Variable(torch.zeros(1))
+    loss = Variable(torch.zeros(1)).cuda()
+    
+    if use_gpu:
+        loss = loss.cuda()
+
     fn = nn.L1Loss()
 
     for masks in maskss:

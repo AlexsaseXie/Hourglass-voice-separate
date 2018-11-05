@@ -74,7 +74,7 @@ for epoch in range(config.epochs):
         print(maskss[0].shape, maskss[1].shape)
 
         #loss = J_loss(maskss, whole , left, right)
-        loss = J_whole_loss(maskss, whole, left)
+        loss = J_whole_loss(maskss, whole, left, use_gpu=config.use_gpu)
         print(loss)
 
         loss.backward()

@@ -57,7 +57,7 @@ for batch_idx in range( test_data_size // config.batch_size):
     masks = net.predict(whole)
 
     #loss = J_loss(maskss, whole , left, right)
-    loss = J_batch_loss(masks, whole, left)
+    loss = J_batch_loss(masks, whole, left, use_gpu=config.use_gpu)
     print(loss)
 
     loss.backward()
