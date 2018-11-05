@@ -1,4 +1,4 @@
-# Hashglass-voice-separate
+# Hourglass-voice-separate
 
 based on MUSIC SOURCE SEPARATION USING STACKED HOURGLASS NETWORKS 
 
