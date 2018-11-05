@@ -46,7 +46,7 @@ import time
 # In[44]:
 
 def runtest():
-    name = 'abjones_1_01'
+    name = 'abjones_1'
     filepath = name + '.wav'
     y, sr = librosa.load(filepath, sr=None, mono=True)
     print(sr)
