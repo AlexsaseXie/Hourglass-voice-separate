@@ -18,8 +18,11 @@ else:
 model_name = config.model_path
 net = VoiceSeparateNet(input_shape=config.feature_size)
 
+if config.use_gpu:
+    net.cuda()
+
 # test data generator
-gen = Generator(file_path='data/test/', feature_size=config.feature_size)
+gen = Generator(file_path='data/test/', feature_size = config.feature_size)
 test_data_iter = gen.get_file_data(batch_size = config.batch_size)
 
 print(gen.whole_mel.shape)
@@ -43,15 +46,19 @@ for batch_idx in range( test_data_size // config.batch_size):
     left = np.reshape(left, (config.batch_size, 1, config.feature_size[0], config.feature_size[1]))
     right = np.reshape(right, (config.batch_size, 1, config.feature_size[0], config.feature_size[1]))  
 
-    whole = Variable(torch.from_numpy(whole))
-    left = Variable(torch.from_numpy(left))
-    right = Variable(torch.from_numpy(right))
+    if config.use_gpu:
+        whole = Variable(torch.from_numpy(whole)).cuda()
+        left = Variable(torch.from_numpy(left)).cuda()
+        right = Variable(torch.from_numpy(right)).cuda()
+    else :
+        whole = Variable(torch.from_numpy(whole))
+        left = Variable(torch.from_numpy(left))
+        right = Variable(torch.from_numpy(right))
 
-    maskss = net(whole)
-    print(maskss[0].shape, maskss[1].shape)
+    masks = net.predict(whole)
 
     #loss = J_loss(maskss, whole , left, right)
-    loss = J_whole_loss(maskss, whole, left)
+    loss = J_batch_loss(masks, whole, left)
     print(loss)
 
     loss.backward()

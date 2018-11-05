@@ -25,6 +25,9 @@ lr = 0.001
 weight_decay = 0.0
 
 
-#
+# feature size
 feature_H = 256
 feature_W = 128
+
+# using gpu?
+use_gpu = False

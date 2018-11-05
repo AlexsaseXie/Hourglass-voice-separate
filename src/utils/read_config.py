@@ -37,8 +37,11 @@ class Config(object):
         # optimizer
         self.optim = config["train"]["optim"]
 
-        #
+        # feature size
         self.feature_size = [ config["train"].as_int("feature_H"), config["train"].as_int("feature_W") ]
+
+        # using gpu?
+        self.use_gpu = config["train"].as_bool("use_gpu")
 
     def write_config(self, filename):
         """

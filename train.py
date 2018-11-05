@@ -18,6 +18,9 @@ else:
 model_name = config.model_path
 net = VoiceSeparateNet(input_shape=config.feature_size)
 
+if config.use_gpu:
+    net.cuda()
+
 # train data generator
 gen = Generator(file_path='data/train/', feature_size=config.feature_size)
 train_data_iter = gen.get_file_data(batch_size = config.batch_size)
@@ -59,9 +62,14 @@ for epoch in range(config.epochs):
         left = np.reshape(left, (config.batch_size, 1, config.feature_size[0], config.feature_size[1]))
         right = np.reshape(right, (config.batch_size, 1, config.feature_size[0], config.feature_size[1]))  
 
-        whole = Variable(torch.from_numpy(whole))
-        left = Variable(torch.from_numpy(left))
-        right = Variable(torch.from_numpy(right))
+        if config.use_gpu:
+            whole = Variable(torch.from_numpy(whole)).cuda()
+            left = Variable(torch.from_numpy(left)).cuda()
+            right = Variable(torch.from_numpy(right)).cuda()
+        else :
+            whole = Variable(torch.from_numpy(whole))
+            left = Variable(torch.from_numpy(left))
+            right = Variable(torch.from_numpy(right))
 
         maskss = net(whole)
         print(maskss[0].shape, maskss[1].shape)
@@ -80,7 +88,7 @@ for epoch in range(config.epochs):
         
         #log_value('train_loss_batch', l.cpu().numpy(), epoch * gen.whole_mel.shape[0] + batch_idx)
 
-        print('train_loss_batch @ batch' + str(epoch * epoch * gen.whole_mel.shape[0] + batch_idx) + ':' , l.cpu().numpy())
+        print('train_loss_batch @ batch' + str(epoch * (train_data_size // config.batch_size) + batch_idx) + ':' , l.cpu().numpy())
 
     print('finish epoch ' + str(epoch))
     #if test_reward > prev_test_reward:
