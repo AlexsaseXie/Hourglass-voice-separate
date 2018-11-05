@@ -12,8 +12,9 @@ class Generator:
     def __init__(self, file_path= 'data/train/', feature_size=[256, 128]):
         self.files = []
         for file in os.listdir(file_path):
-            tmp_path = os.path.join(file_path, file)
-            self.files.append(tmp_path)
+            if (file != '.placeholder'):
+                tmp_path = os.path.join(file_path, file)
+                self.files.append(tmp_path)
 
         self.feature_size = feature_size
 
