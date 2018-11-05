@@ -2,7 +2,6 @@ import sys
 import numpy as np
 import torch
 import torch.optim as optim
-from tensorboard_logger import configure, log_value
 from torch.autograd.variable import Variable
 from src.model.model import HourglassNet, VoiceSeparateNet
 from src.model.loss import J_batch_loss, J_whole_loss, J_loss
