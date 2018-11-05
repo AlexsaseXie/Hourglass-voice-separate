@@ -83,8 +83,8 @@ class Generator:
                                  batch_size):
                 file_ids = IDS[rand_id:rand_id + batch_size]
 
-                wholes = self.whole_mel[file_ids,:,:]
-                lefts = self.left_mel[file_ids,:,:]
-                rights = self.right_mel[file_ids,:,:]
+                wholes = self.whole_mel[file_ids,:,:].astype(dtype=np.float32)
+                lefts = self.left_mel[file_ids,:,:].astype(dtype=np.float32)
+                rights = self.right_mel[file_ids,:,:].astype(dtype=np.float32)
 
                 yield [wholes, lefts, rights]

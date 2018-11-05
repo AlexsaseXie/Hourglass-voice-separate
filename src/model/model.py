@@ -3,11 +3,9 @@ import torch
 import torch.nn as nn
 from torch.autograd.variable import Variable
 
-
 class HourglassNet(nn.Module):
     def __init__(self,
                  input_shape=[512, 64],
-                 predict_masks = 2,
                  ):
         """
 
@@ -74,7 +72,7 @@ class HourglassNet(nn.Module):
 
 
     def pred(self, freq_map):
-        print(freq_map.shape)
+        # print(freq_map.shape)
         n_1 = self.n_conv1(freq_map)
         n_2 = self.n_conv2(n_1)
         n_3 = self.n_conv3(n_2)
@@ -111,3 +109,24 @@ class HourglassNet(nn.Module):
     def test(self, data):
         """ Describes test behaviour of different models"""
         return 0
+
+class VoiceSeparateNet(nn.Module):
+    def __init__(self, 
+            input_shape=[512, 64],
+            pred_masks = 2
+            ):
+
+        super(VoiceSeparateNet, self).__init__()
+
+        self.input_shape = input_shape
+        self.pred_masks = 2
+
+        self.hg1 = HourglassNet(input_shape=self.input_shape)
+        self.hg2 = HourglassNet(input_shape=self.input_shape)
+
+    def forward(self, x):
+
+        mask1s, next_inputs = self.hg1(x)
+        mask2s, _ = self.hg2(next_inputs)
+
+        return mask1s, mask2s
