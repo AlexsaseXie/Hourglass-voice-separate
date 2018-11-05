@@ -45,8 +45,8 @@ def J_loss(maskss, initial_mels, left, right):
     left_maskss = [ m[:,0:1,:,:] for m in maskss ]
     right_maskss = [ m[:,1:2,:,:] for m in maskss ]
 
-    left_loss = whole_J_loss(left_maskss, initial_mels, left)
-    right_loss = whole_J_loss(right_maskss, initial_mels, right)
+    left_loss = J_whole_loss(left_maskss, initial_mels, left)
+    right_loss = J_whole_loss(right_maskss, initial_mels, right)
 
     loss = left_loss + right_loss
 
