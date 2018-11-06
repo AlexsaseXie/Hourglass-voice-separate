@@ -69,8 +69,8 @@ class HourglassNet(nn.Module):
         )
 
         self.one_conv1 = nn.Conv2d(in_channels=1,out_channels=1,kernel_size = 1)
-        self.one_conv2 = nn.Conv2d(in_channels=1,out_channels=1,kernel_size = 1)
-        self.one_conv3 = nn.Conv2d(in_channels=1,out_channels=1,kernel_size = 1)
+        self.one_conv2 = nn.Conv2d(in_channels=1,out_channels=self.pred_mask,kernel_size = 1)
+        self.one_conv3 = nn.Conv2d(in_channels=self.pred_mask,out_channels=1,kernel_size = 1)
 
 
     def pred(self, freq_map):
@@ -117,6 +117,11 @@ class VoiceSeparateNet(nn.Module):
 
         self.input_shape = input_shape
 
+        self.initial_convs = nn.Sequential (
+            nn.Conv2d(in_channels=1,out_channels=1,kernel_size = 3,padding=(1,1)),
+            nn.Conv2d(in_channels=1,out_channels=1,kernel_size = 3,padding=(1,1)),
+        )
+
         self.hg1 = HourglassNet(input_shape=self.input_shape)
         self.hg2 = HourglassNet(input_shape=self.input_shape)
         self.hg3 = HourglassNet(input_shape=self.input_shape)
@@ -125,7 +130,8 @@ class VoiceSeparateNet(nn.Module):
 
     def forward(self, x):
 
-        mask1s, next_inputs = self.hg1(x)
+        a = self.initial_convs(x)
+        mask1s, next_inputs = self.hg1(a)
         mask2s, next_inputs = self.hg2(next_inputs)
         mask3s, next_inputs = self.hg3(next_inputs)
         mask4s, _ = self.hg4(next_inputs)
@@ -134,9 +140,10 @@ class VoiceSeparateNet(nn.Module):
 
     def predict(self, x):
 
-        mask1s, next_inputs = self.hg1(x)
-        mask2s, next_inputs = self.hg2(next_inputs)
-        mask3s, next_inputs = self.hg3(next_inputs)
+        a = self.initial_convs(x)
+        _, next_inputs = self.hg1(a)
+        _, next_inputs = self.hg2(next_inputs)
+        _, next_inputs = self.hg3(next_inputs)
         mask4s, _ = self.hg4(next_inputs)
 
         return mask4s

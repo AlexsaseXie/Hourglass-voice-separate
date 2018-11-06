@@ -4,7 +4,7 @@ import torch
 import torch.optim as optim
 from torch.autograd.variable import Variable
 from src.model.model import HourglassNet, VoiceSeparateNet
-from src.model.loss import J_1track_loss, J_1track_whole_loss, J_2track_whole_loss
+from src.model.loss import J_1track_loss, J_1track_whole_loss, J_2track_whole_loss, J_2track_loss
 from src.generator.generator import Generator
 from src.utils import read_config
 
@@ -71,11 +71,14 @@ for epoch in range(config.epochs):
             right = Variable(torch.from_numpy(right))
 
         maskss = net(whole)
-        print(maskss[0].shape, maskss[1].shape)
+        print(maskss[0].shape)
 
-        #loss = J_loss(maskss, whole , left, right)
-        loss = J_1track_whole_loss(maskss, whole, left, use_gpu=config.use_gpu)
-        print(loss)
+        #loss = J_1track_whole_loss(maskss, whole, left, use_gpu=config.use_gpu)
+        
+        #if (epoch <= config.epochs // 5):
+        loss = J_2track_whole_loss(maskss, whole, left, right,use_gpu=config.use_gpu)
+        #else:
+        #    loss = J_2track_loss(maskss[-1], whole, left, right, use_gpu=config.use_gpu)
 
         loss.backward()
 

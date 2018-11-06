@@ -4,7 +4,7 @@ import torch
 import torch.optim as optim
 from torch.autograd.variable import Variable
 from src.model.model import HourglassNet, VoiceSeparateNet
-from src.model.loss import J_1track_loss, J_1track_whole_loss, J_2track_whole_loss
+from src.model.loss import J_1track_loss, J_1track_whole_loss, J_2track_whole_loss, J_2track_loss
 from src.generator.generator import Generator
 from src.utils import read_config
 
@@ -57,10 +57,8 @@ for batch_idx in range( test_data_size // config.batch_size):
     masks = net.predict(whole)
 
     #loss = J_loss(maskss, whole , left, right)
-    loss = J_1track_loss(masks, whole, left, use_gpu=config.use_gpu)
+    loss = J_2track_loss(masks, whole, left, right, use_gpu=config.use_gpu)
     print(loss)
-
-    loss.backward()
 
     l = loss.data
     test_loss += l

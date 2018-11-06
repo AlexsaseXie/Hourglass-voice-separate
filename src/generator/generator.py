@@ -9,7 +9,7 @@ class Generator:
     file_path: wavs file path
     feature_size: feature_size
     """
-    def __init__(self, file_path='data/train/', feature_size=[256, 128]):
+    def __init__(self, file_path='data/train/', feature_size=[512, 64]):
         self.files = []
         for file in os.listdir(file_path):
             if (file != '.placeholder'):
@@ -24,12 +24,12 @@ class Generator:
 
         # load files
         for fp in self.files:
-            mono_y, sr = librosa.load(fp, sr=None, mono=True)
-            left_right_y, sr = librosa.load(fp, sr=None, mono=False)
+            mono_y, _ = librosa.load(fp, sr=None, mono=True)
+            left_right_y, _ = librosa.load(fp, sr=None, mono=False)
             
-            new_whole_mel = librosa.power_to_db(librosa.feature.melspectrogram(mono_y, sr=sr, n_mels=self.feature_size[0]))
-            new_left_mel = librosa.power_to_db(librosa.feature.melspectrogram(left_right_y[0], sr=sr, n_mels=self.feature_size[0]))
-            new_right_mel = librosa.power_to_db(librosa.feature.melspectrogram(left_right_y[1], sr=sr, n_mels=self.feature_size[0]))
+            new_whole_mel, _ = librosa.core.spectrum._spectrogram(mono_y, n_fft=self.feature_size[0] * 2 - 1, power=1)
+            new_left_mel, _ = librosa.core.spectrum._spectrogram(left_right_y[0], n_fft=self.feature_size[0] * 2 - 1, power=1)
+            new_right_mel, _ = librosa.core.spectrum._spectrogram(left_right_y[1], n_fft=self.feature_size[0] * 2 - 1, power=1)
 
             self.insert_mel_list(new_whole_mel, mode = 1)
             self.insert_mel_list(new_left_mel, mode = 2)

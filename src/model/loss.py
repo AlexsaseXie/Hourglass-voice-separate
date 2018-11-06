@@ -5,10 +5,11 @@ from torch.autograd import Variable
 
 def J_1track_loss(masks, initial_mels, labels, use_gpu = False):
     """
-    masks & initial_mels : batch * 1 * 256 * 128
-    label : batch * 1 * 256 * 128
+    masks & initial_mels : batch * 1 * 512 * 64
+    label : batch * 1 * 512 * 64
     """
     pred = masks * initial_mels
+
     fn = nn.L1Loss()
 
     loss = fn(pred, labels)
@@ -18,8 +19,8 @@ def J_1track_loss(masks, initial_mels, labels, use_gpu = False):
 def J_1track_whole_loss(maskss, initial_mels, labels, use_gpu = False):
     """
     maskss : [mask1s, mask2s, mask3s ...]
-    initial_mels : batch * 1 * 256 * 128
-    label : batch * 1 * 256 * 128
+    initial_mels : batch * 1 * 512 * 64
+    label : batch * 1 * 512 * 64
     """
     loss = Variable(torch.zeros(1))
     
@@ -38,9 +39,9 @@ def J_1track_whole_loss(maskss, initial_mels, labels, use_gpu = False):
 def J_2track_whole_loss(maskss, initial_mels, left, right, use_gpu = False):
     """
     maskss : [mask1s, mask2s, mask3s ...]
-    mask1s : batch * 2 * 256 * 128
-    initial_mels : batch * 1 * 256 * 128
-    label : batch * 1 * 256 * 128
+    mask1s : batch * 2 * 512 * 64
+    initial_mels : batch * 1 * 512 * 64
+    label : batch * 1 * 512 * 64
     """
     left_maskss = [ m[:,0:1,:,:] for m in maskss ]
     right_maskss = [ m[:,1:2,:,:] for m in maskss ]
@@ -53,6 +54,12 @@ def J_2track_whole_loss(maskss, initial_mels, left, right, use_gpu = False):
     return loss
 
 def J_2track_loss(two_track_masks, initial_mels, left, right, use_gpu = False):
+    """
+    maskss : [mask1s, mask2s, mask3s ...]
+    mask1s : batch * 2 * 512 * 64
+    initial_mels : batch * 1 * 512 * 64
+    left : batch * 1 * 512 * 64
+    """
     left_m = two_track_masks[:,0:1,:,:]
 
     left_loss = J_1track_loss(left_m, initial_mels, left, use_gpu=use_gpu)
