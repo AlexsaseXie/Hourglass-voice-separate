@@ -26,6 +26,8 @@ if config.use_gpu:
 # load pre-trained model
 net.load_state_dict(torch.load(config.pretrain_modelpath))
 
+net.eval()
+
 def windows(data, window_size, stride):
     """
     data : H * W, window on W 
@@ -49,10 +51,10 @@ right_freq_map = np.zeros(shape=(512, clip_size))
 
 for (start, end) in windows(whole_clip, window_size=window_size, stride=window_size):
     frame_end = end
-    whole = whole_clip[start:end]
-    if (len(whole) != window_size):
+    whole = whole_clip[:,start:end]
+    if (whole.shape[1] != window_size):
         frame_end = clip_size
-        whole = whole_clip[clip_size-window_size:clip_size]
+        whole = whole_clip[:,clip_size-window_size:clip_size]
 
     whole_in = np.reshape(whole, (1, 1, config.feature_size[0], config.feature_size[1]))
 
@@ -61,22 +63,26 @@ for (start, end) in windows(whole_clip, window_size=window_size, stride=window_s
     else :
         whole_in = Variable(torch.from_numpy(whole_in))
 
-    masks = net.predict(whole_in)    # 1 * 2 * 512 * 64
+    masks = net.module.predict(whole_in)    # 1 * 2 * 512 * 64
 
     masks = masks.data.cpu().numpy()
 
     # may optimize mask here
+    audio_transfer.fix_mask(whole, masks[0,0,:,:], 60)
+    audio_transfer.fix_mask(whole, masks[0,1,:,:], 60)
 
     left = masks[0,0,:,:] * whole
     right = masks[0,1,:,:] * whole
     
-    left_freq_map[start:frame_end] = left[window_size - (frame_end - start):window_size]
-    right_freq_map[start:frame_end] = right[window_size - (frame_end - start):window_size]
+    print(start, frame_end)
+    print(window_size)
+    left_freq_map[:,start:frame_end] = left[:,window_size - (frame_end - start):window_size]
+    right_freq_map[:,start:frame_end] = right[:,window_size - (frame_end - start):window_size]
 
     # apply transfer
     phase = audio_transfer.audio_to_phase(audio_clip, n_fft=config.feature_size[0] * 2 - 1, hop_length=512, win_length = config.feature_size[0] * 2 - 1)
-    left_seq = audio_transfer.resynthesis(left_freq_map, phase, hop_length=512,win_length = config.feature_size[0] * 2 - 1)
-    right_seq = audio_transfer.resynthesis(right_freq_map, phase, hop_length=512,win_length = config.feature_size[0] * 2 - 1)
+    left_seq = audio_transfer.resynthesis(left_freq_map, phase, hop_length=512,win_length = config.feature_size[0] * 2 - 2)
+    right_seq = audio_transfer.resynthesis(right_freq_map, phase, hop_length=512,win_length = config.feature_size[0] * 2 - 2)
 
     librosa.output.write_wav('left_'+file_name,left_seq, sr)
     librosa.output.write_wav('right_'+file_name,right_seq, sr)
