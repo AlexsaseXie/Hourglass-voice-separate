@@ -1,6 +1,7 @@
 import sys
 import numpy as np
 import torch
+import torch.nn as nn
 import torch.optim as optim
 from torch.autograd.variable import Variable
 from src.model.model import HourglassNet, VoiceSeparateNet
@@ -16,6 +17,7 @@ else:
 # model name
 model_name = config.model_path
 net = VoiceSeparateNet(input_shape=config.feature_size)
+net = nn.DataParallel(net)
 
 if config.use_gpu:
     net.cuda()
