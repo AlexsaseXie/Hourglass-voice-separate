@@ -84,8 +84,10 @@ for epoch in range(config.epochs):
         loss.backward()
 
         # Clip the gradient to fixed value to stabilize training.
+        
         torch.nn.utils.clip_grad_norm(net.parameters(), 20)
         optimizer.step()
+        
         l = loss.data
         train_loss += l
         
@@ -96,6 +98,10 @@ for epoch in range(config.epochs):
     print('finish epoch ' + str(epoch) + ' :' + str(train_loss /  (config.batch_size * ( train_data_size //config.batch_size) )) )
     #if test_reward > prev_test_reward:
     torch.save(net.state_dict(), "trained_models/{}.pth".format(model_name))
+
+    if (epoch == int(config.epochs * 0.8)):
+        for param_group in optimizer.param_groups:
+            param_group['lr'] = config.lr / 5
 
 
 
