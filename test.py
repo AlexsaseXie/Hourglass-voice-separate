@@ -1,6 +1,7 @@
 import sys
 import numpy as np
 import torch
+import torch.nn as nn
 import torch.optim as optim
 from torch.autograd.variable import Variable
 from src.model.model import HourglassNet, VoiceSeparateNet
