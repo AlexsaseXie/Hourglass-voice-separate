@@ -71,10 +71,9 @@ for epoch in range(config.epochs):
             right = Variable(torch.from_numpy(right))
 
         maskss = net(whole)
-        print(maskss[0].shape)
 
         #loss = J_1track_whole_loss(maskss, whole, left, use_gpu=config.use_gpu)
-        
+
         #if (epoch <= config.epochs // 5):
         loss = J_2track_whole_loss(maskss, whole, left, right,use_gpu=config.use_gpu)
         #else:
@@ -90,9 +89,9 @@ for epoch in range(config.epochs):
         
         #log_value('train_loss_batch', l.cpu().numpy(), epoch * gen.whole_mel.shape[0] + batch_idx)
 
-        print('train_loss_batch @ batch' + str(epoch * (train_data_size // config.batch_size) + batch_idx) + ':' , l.cpu().numpy())
+        #print('train_loss_batch @ batch' + str(epoch * (train_data_size // config.batch_size) + batch_idx) + ':' , l.cpu().numpy())
 
-    print('finish epoch ' + str(epoch))
+    print('finish epoch ' + str(epoch) + ' :' + str(train_loss /  (config.batch_size * ( train_data_size //config.batch_size) )) )
     #if test_reward > prev_test_reward:
     torch.save(net.state_dict(), "trained_models/{}.pth".format(model_name))
 

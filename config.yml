@@ -13,7 +13,7 @@ pretrain_model_path = "trained_models/test_1.pth"
 num_epochs = 100
 
 # batch size for training
-batch_size = 5
+batch_size = 20
 
 # Optimizer
 optim = adam
