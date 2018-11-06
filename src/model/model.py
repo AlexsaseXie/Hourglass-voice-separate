@@ -6,6 +6,7 @@ from torch.autograd.variable import Variable
 class HourglassNet(nn.Module):
     def __init__(self,
                  input_shape=[512, 64],
+                 pred_mask = 2,
                  ):
         """
 
@@ -13,6 +14,7 @@ class HourglassNet(nn.Module):
         super(HourglassNet, self).__init__()
 
         self.input_shape = input_shape
+        self.pred_mask = 2
 
         # Encoder architecture
         self.n_conv1 = nn.Sequential (
