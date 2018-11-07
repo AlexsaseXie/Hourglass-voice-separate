@@ -96,7 +96,6 @@ for epoch in range(config.epochs):
         #print('train_loss_batch @ batch' + str(epoch * (train_data_size // config.batch_size) + batch_idx) + ':' , l.cpu().numpy())
 
     print('finish epoch ' + str(epoch) + ' :' + str(train_loss /  (config.batch_size * ( train_data_size //config.batch_size) )) )
-    #if test_reward > prev_test_reward:
     torch.save(net.state_dict(), "trained_models/{}.pth".format(model_name))
 
     if (epoch == int(config.epochs * 0.8)):
