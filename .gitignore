@@ -8,3 +8,8 @@
 trained_models/*.pth
 
 .idea/
+
+src/*.mat
+src/*.wav
+src/*.png
+src/*.txt
