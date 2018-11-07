@@ -7,6 +7,7 @@ import librosa
 import numpy as np
 import soundfile as sf
 from . import andabi
+from src.utils import audio_transfer
 
 class ModelConfig:
     SR = 8000
@@ -15,17 +16,19 @@ class ModelConfig:
 
 
 
-def estimate(mix_file, acc_file, voice_file):
-    mix, sr = sf.read(mix_file)
-    acc, voice = mix[:, 0], mix[:, 1]
-    mix = librosa.to_mono(np.transpose(mix))
-    pred_acc, _ = sf.read(acc_file)
-    pred_voice, _ = sf.read(voice_file)
+def estimate(mix, acc, voice, pred_acc, pred_voice):
+    # mix, sr = sf.read(mix_file)
+    # acc, voice = mix[:, 0], mix[:, 1]
+    # mix = librosa.to_mono(np.transpose(mix))
+    # pred_acc, _ = sf.read(acc_file)
+    # pred_voice, _ = sf.read(voice_file)
 
     nsdr, sdr, sdr_mix, sir, sar, length = bss_eval(mix, acc, voice, pred_acc, pred_voice)
     return nsdr, sir, sar, length
 
-def estimate_batch(batch):
+
+def estimate_batch(whole_batch, left_batch, right_batch, mask_batch, phase_batch, phase_acc_batch, phase_voice_batch, batch_size):
+    # matrix size: batch * 1(2) * 512 * 64
     # [accompaniment, voice]
     estimation = {
         'GNSDR': np.zeros(2, dtype=np.float64),
@@ -33,17 +36,41 @@ def estimate_batch(batch):
         'GSAR': np.zeros(2, dtype=np.float64)
     }
     total_length = 0
-    for mix_f, acc_f, voice_f in batch:
-        nsdr, sir, sar, length = estimate(mix_f, acc_f, voice_f)
+    for i in range(batch_size):
+        whole_spec = whole_batch[i, 0, :, :]
+        acc_spec = left_batch[i, 0, :, :]
+        voice_spec = right_batch[i, 0, :, :]
+        mask_acc = mask_batch[i, 0, :, :]
+        mask_voice = mask_batch[i, 1, :, :]
+        phase = phase_batch[i, 0, :, :]
+        phase_acc = phase_acc_batch[i, 0, :, :]
+        phase_voice = phase_voice_batch[i, 0, :, :]
+
+        whole_seq = audio_transfer.resynthesis(whole_spec, phase, 512, 1022)
+        acc_seq = audio_transfer.resynthesis(acc_spec, phase_acc, 512, 1022)
+        voice_seq = audio_transfer.resynthesis(voice_spec, phase_voice, 512, 1022)
+        pred_acc_seq = audio_transfer.resynthesis(mask_acc * whole_spec, phase, 512, 1022)
+        pred_voice_seq = audio_transfer.resynthesis(mask_voice * whole_spec, phase, 512, 1022)
+
+        nsdr, sir, sar, length = bss_eval(whole_seq, acc_seq, voice_seq, pred_acc_seq, pred_voice_seq)
         estimation['GNSDR'] += nsdr * length
         estimation['GSIR'] += sir * length
         estimation['GSAR'] += sar * length
         total_length += length
 
-    for k in estimation.keys():
-        estimation[k] = estimation[k] / total_length
+    return estimation, total_length
 
-    return estimation
+    # for mix_f, acc_f, voice_f in batch:
+    #     nsdr, sir, sar, length = estimate(mix_f, acc_f, voice_f)
+    #     estimation['GNSDR'] += nsdr * length
+    #     estimation['GSIR'] += sir * length
+    #     estimation['GSAR'] += sar * length
+    #     total_length += length
+    #
+    # for k in estimation.keys():
+    #     estimation[k] = estimation[k] / total_length
+    #
+    # return estimation
 
 
 def get_wav(filename, sr=ModelConfig.SR):
@@ -78,7 +105,7 @@ def bss_eval(mixed_wav, src1_wav, src2_wav, pred_src1_wav, pred_src2_wav):
     # sdr, sir, sar, _ = bss_eval_sources(src2_wav,pred_src2_wav, False)
     # sdr_mixed, _, _, _ = bss_eval_sources(src2_wav,mixed_wav, False)
     nsdr = sdr - sdr_mixed
-    return nsdr, sdr, sdr_mixed, sir, sar, length
+    return nsdr, sir, sar, length
 
 def bss_eval_sdr(src1_wav, pred_src1_wav):
         len_cropped = pred_src1_wav.shape[0]

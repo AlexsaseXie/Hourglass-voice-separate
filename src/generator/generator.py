@@ -3,6 +3,7 @@ import os
 import librosa
 import numpy as np
 from matplotlib import pyplot as plt
+from ..utils import audio_transfer
 
 class Generator:
     """
@@ -21,23 +22,36 @@ class Generator:
         self.whole_mel = np.zeros(shape=(1, feature_size[0], feature_size[1]))
         self.left_mel = np.zeros(shape=(1, feature_size[0], feature_size[1]))
         self.right_mel = np.zeros(shape=(1, feature_size[0], feature_size[1]))
+        self.phase = np.zeros(shape=(1, feature_size[0], feature_size[1]))
+        self.phase_acc = np.zeros(shape=(1, feature_size[0], feature_size[1]))
+        self.phase_voice = np.zeros(shape=(1, feature_size[0], feature_size[1]))
 
         # load files
         for fp in self.files:
             mono_y, _ = librosa.load(fp, sr=None, mono=True)
             left_right_y, _ = librosa.load(fp, sr=None, mono=False)
-            
-            new_whole_mel, _ = librosa.core.spectrum._spectrogram(mono_y, n_fft=self.feature_size[0] * 2 - 1, power=1)
-            new_left_mel, _ = librosa.core.spectrum._spectrogram(left_right_y[0], n_fft=self.feature_size[0] * 2 - 1, power=1)
-            new_right_mel, _ = librosa.core.spectrum._spectrogram(left_right_y[1], n_fft=self.feature_size[0] * 2 - 1, power=1)
+
+            using_nfft = self.feature_size[0] * 2 - 1
+            new_whole_mel, _ = librosa.core.spectrum._spectrogram(mono_y, n_fft=using_nfft, power=1)
+            new_phase = audio_transfer.audio_to_phase(mono_y, using_nfft, 512, using_nfft)
+            new_phase_acc = audio_transfer.audio_to_phase(left_right_y[0], using_nfft, 512, using_nfft)
+            new_phase_voice = audio_transfer.audio_to_phase(left_right_y[1], using_nfft, 512, using_nfft)
+            new_left_mel, _ = librosa.core.spectrum._spectrogram(left_right_y[0], n_fft=using_nfft, power=1)
+            new_right_mel, _ = librosa.core.spectrum._spectrogram(left_right_y[1], n_fft=using_nfft, power=1)
 
             self.insert_mel_list(new_whole_mel, mode = 1)
             self.insert_mel_list(new_left_mel, mode = 2)
             self.insert_mel_list(new_right_mel, mode = 3)
+            self.insert_mel_list(new_phase, mode=4)
+            self.insert_mel_list(new_phase_acc, mode=5)
+            self.insert_mel_list(new_phase_voice, mode=6)
 
         self.whole_mel = self.whole_mel[1:,:,:]
         self.left_mel = self.left_mel[1:,:,:]
         self.right_mel = self.right_mel[1:,:,:]
+        self.phase = self.phase[1:, :, :]
+        self.phase_acc = self.phase_acc[1:, :, :]
+        self.phase_voice = self.phase_voice[1:, :, :]
         pass 
 
     def windows(self, data, window_size, stride):
@@ -62,8 +76,14 @@ class Generator:
                     self.whole_mel = np.append(self.whole_mel, [tmp], axis = 0)
                 elif (mode == 2):
                     self.left_mel = np.append(self.left_mel, [tmp], axis = 0)
-                else :
+                elif mode == 3:
                     self.right_mel = np.append(self.right_mel, [tmp], axis = 0)
+                elif mode == 4:
+                    self.phase = np.append(self.phase, [tmp], axis = 0)
+                elif mode == 5:
+                    self.phase_acc = np.append(self.phase_acc, [tmp], axis=0)
+                elif mode == 6:
+                    self.phase_voice = np.append(self.phase_voice, [tmp], axis=0)
 
     def get_file_data(self, batch_size: int, if_randomize=True):
         """
@@ -86,8 +106,11 @@ class Generator:
                                  batch_size):
                 file_ids = IDS[rand_id:rand_id + batch_size]
 
-                wholes = self.whole_mel[file_ids,:,:].astype(dtype=np.float32)
-                lefts = self.left_mel[file_ids,:,:].astype(dtype=np.float32)
-                rights = self.right_mel[file_ids,:,:].astype(dtype=np.float32)
+                wholes = self.whole_mel[file_ids, :, :].astype(dtype=np.float32)
+                lefts = self.left_mel[file_ids, :, :].astype(dtype=np.float32)
+                rights = self.right_mel[file_ids, :, :].astype(dtype=np.float32)
+                phases = self.phase[file_ids, :, :].astype(dtype=np.complex64)
+                phases_acc = self.phase_acc[file_ids, :, :].astype(dtype=np.complex64)
+                phases_voice = self.phase_voice[file_ids, :, :].astype(dtype=np.complex64)
 
-                yield [wholes, lefts, rights]
+                yield [wholes, lefts, rights, phases, phases_acc, phases_voice]
