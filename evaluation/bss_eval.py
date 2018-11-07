@@ -27,7 +27,7 @@ def estimate(mix, acc, voice, pred_acc, pred_voice):
     return nsdr, sir, sar, length
 
 
-def estimate_batch(whole_batch, left_batch, right_batch, mask_batch, phase_batch, phase_acc_batch, phase_voice_batch, batch_size):
+def estimate_batch(whole_batch, left_batch, right_batch, mask_batch, phase_batch, phase_acc_batch, phase_voice_batch, batch_size, fixing_mask):
     # matrix size: batch * 1(2) * 512 * 64
     # [accompaniment, voice]
     estimation = {
@@ -45,6 +45,9 @@ def estimate_batch(whole_batch, left_batch, right_batch, mask_batch, phase_batch
         phase = phase_batch[i, 0, :, :]
         phase_acc = phase_acc_batch[i, 0, :, :]
         phase_voice = phase_voice_batch[i, 0, :, :]
+
+        if fixing_mask:
+            mask_voice = audio_transfer.fix_mask(whole_spec, mask_voice, 100)
 
         whole_seq = audio_transfer.resynthesis(whole_spec, phase, 512, 1022)
         acc_seq = audio_transfer.resynthesis(acc_spec, phase_acc, 512, 1022)

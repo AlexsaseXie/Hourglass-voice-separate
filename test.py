@@ -97,7 +97,7 @@ for batch_idx in range( test_data_size // config.batch_size):
     # fix mask
 
     # matrix size: batch * 1(2) * 512 * 64
-    batch_est, batch_length = bss_eval.estimate_batch(whole1, left1, right1, masks1, phase, phase_acc, phase_voice, config.batch_size)
+    batch_est, batch_length = bss_eval.estimate_batch(whole1, left1, right1, masks1, phase, phase_acc, phase_voice, config.batch_size, False)
     for k in estimation.keys():
         estimation[k] = estimation[k] + batch_est[k]
 
