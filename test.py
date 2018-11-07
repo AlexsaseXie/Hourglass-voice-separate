@@ -6,7 +6,7 @@ import torch.optim as optim
 from torch.autograd.variable import Variable
 from src.model.model import HourglassNet, VoiceSeparateNet
 from src.model.loss import J_1track_loss, J_1track_whole_loss, J_2track_whole_loss, J_2track_loss
-from src.generator.generator import Generator
+from src.generator.generator import Generator, TestGenerator
 from src.utils import read_config
 from src.utils import audio_transfer
 from evaluation import bss_eval
@@ -19,12 +19,13 @@ else:
 # model name
 model_name = config.model_path
 net = VoiceSeparateNet(input_shape=config.feature_size)
+net = nn.DataParallel(net)
 
 if config.use_gpu:
     net.cuda()
 
 # test data generator
-gen = Generator(file_path='data/test/', feature_size = config.feature_size)
+gen = TestGenerator(file_path='data/parttest/', feature_size = config.feature_size)
 test_data_iter = gen.get_file_data(batch_size = config.batch_size)
 
 print(gen.whole_mel.shape)
@@ -71,7 +72,8 @@ for batch_idx in range( test_data_size // config.batch_size):
         right = Variable(torch.from_numpy(right))
         # phase = Variable(torch.from_numpy(phase))
 
-    masks = net.predict(whole)
+    #masks = net.module.predict(whole)
+    masks = net(whole)[-1]
 
     # masks: batch * 2 * 512 * 64
 
@@ -88,15 +90,20 @@ for batch_idx in range( test_data_size // config.batch_size):
 
 
     # estimation
-    masks = masks.data.cpu().numpy()
+    masks1 = masks.data.cpu().numpy()
+    left1 = left.data.cpu().numpy()
+    whole1 = whole.data.cpu().numpy()
+    right1 = right.data.cpu().numpy()
     # fix mask
 
     # matrix size: batch * 1(2) * 512 * 64
-    batch_est, batch_length = bss_eval.estimate_batch(whole, left, right, masks, phase, phase_acc, phase_voice, config.batch_size)
+    batch_est, batch_length = bss_eval.estimate_batch(whole1, left1, right1, masks1, phase, phase_acc, phase_voice, config.batch_size)
     for k in estimation.keys():
         estimation[k] = estimation[k] + batch_est[k]
 
     total_length += batch_length
+
+
 
 print('average_loss: ' + str(test_loss /  ( config.batch_size * (test_data_size // config.batch_size)) ))
 
