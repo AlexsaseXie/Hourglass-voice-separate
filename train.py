@@ -26,6 +26,10 @@ if config.use_gpu:
 gen = Generator(file_path='data/train/', feature_size=config.feature_size)
 train_data_iter = gen.get_file_data(batch_size = config.batch_size)
 
+# validate data generator
+gen_v = Generator(file_path='data/validate/', feature_size=config.feature_size)
+validate_data_iter = gen_v.get_file_data(batch_size = config.batch_size)
+
 # load pre-trained model
 if config.preload_model:
     net.load_state_dict(torch.load(config.pretrain_modelpath))
@@ -49,6 +53,7 @@ elif config.optim == "adam":
 
 
 train_data_size = gen.whole_mel.shape[0]
+validate_data_size = gen_v.whole_mel.shape[0]
 
 for epoch in range(config.epochs):
     train_loss = 0
@@ -91,16 +96,42 @@ for epoch in range(config.epochs):
         l = loss.data
         train_loss += l
         
-        #log_value('train_loss_batch', l.cpu().numpy(), epoch * gen.whole_mel.shape[0] + batch_idx)
-
-        #print('train_loss_batch @ batch' + str(epoch * (train_data_size // config.batch_size) + batch_idx) + ':' , l.cpu().numpy())
-
     print('finish epoch ' + str(epoch) + ' :' + str(train_loss /  (config.batch_size * ( train_data_size //config.batch_size) )) )
-    torch.save(net.state_dict(), "trained_models/{}.pth".format(model_name))
 
     if (epoch == int(config.epochs * 0.8)):
         for param_group in optimizer.param_groups:
             param_group['lr'] = config.lr / 5
+
+    # validate
+    validate_loss = 0
+    for batch_idx in range( validate_data_size // config.batch_size):
+        whole, left, right = next(validate_data_iter)
+        
+        whole = np.reshape(whole, (config.batch_size, 1, config.feature_size[0], config.feature_size[1]))
+        left = np.reshape(left, (config.batch_size, 1, config.feature_size[0], config.feature_size[1]))
+        right = np.reshape(right, (config.batch_size, 1, config.feature_size[0], config.feature_size[1]))  
+
+        if config.use_gpu:
+            whole = Variable(torch.from_numpy(whole)).cuda()
+            left = Variable(torch.from_numpy(left)).cuda()
+            right = Variable(torch.from_numpy(right)).cuda()
+        else :
+            whole = Variable(torch.from_numpy(whole))
+            left = Variable(torch.from_numpy(left))
+            right = Variable(torch.from_numpy(right))
+
+        maskss = net(whole)
+
+        loss = J_2track_whole_loss(maskss, whole, left, right,use_gpu=config.use_gpu)
+        
+        l = loss.data
+        validate_loss += l
+
+    print('finish epoch ' + str(epoch) + ' :' + str(validate_loss /  (config.batch_size * ( validate_data_size //config.batch_size) )) )
+    torch.save(net.state_dict(), "trained_models/{}.pth".format(model_name))
+
+
+    
 
 
 
