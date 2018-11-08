@@ -30,4 +30,4 @@ feature_H = 512
 feature_W = 64
 
 # using gpu?
-use_gpu = False
+use_gpu = True
