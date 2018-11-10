@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.autograd.variable import Variable
-from src.model.model import HourglassNet, VoiceSeparateNet
+from src.model.model_with_relu import HourglassNet, VoiceSeparateNet
 from src.model.loss import J_1track_loss, J_1track_whole_loss, J_2track_whole_loss, J_2track_loss
 from src.generator.generator import Generator, TestGenerator
 from src.utils import read_config

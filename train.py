@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.autograd.variable import Variable
-from src.model.model import HourglassNet, VoiceSeparateNet
+from src.model.model_with_relu import HourglassNet, VoiceSeparateNet
 from src.model.loss import J_1track_loss, J_1track_whole_loss, J_2track_whole_loss, J_2track_loss
 from src.generator.generator import Generator
 from src.utils import read_config
@@ -127,7 +127,7 @@ for epoch in range(config.epochs):
         l = loss.data
         validate_loss += l
 
-    print('finish epoch ' + str(epoch) + ' :' + str(validate_loss /  (config.batch_size * ( validate_data_size //config.batch_size) )) )
+    print('finish epoch ' + str(epoch) + ' validate:' + str(validate_loss /  (config.batch_size * ( validate_data_size //config.batch_size) )) )
     torch.save(net.state_dict(), "trained_models/{}.pth".format(model_name))
 
 

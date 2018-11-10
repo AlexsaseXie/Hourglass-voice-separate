@@ -4,7 +4,7 @@ import torch
 from torch import nn
 import torch.optim as optim
 from torch.autograd.variable import Variable
-from src.model.model import HourglassNet, VoiceSeparateNet
+from src.model.model_with_relu import HourglassNet, VoiceSeparateNet
 from src.utils import read_config
 import librosa
 from src.utils import audio_transfer
